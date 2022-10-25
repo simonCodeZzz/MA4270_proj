@@ -21,3 +21,7 @@
 | rff_rmse_XXXX.npy   | Contain the rmse of RFF in XXXX experiment                                                    |
 | rff_time_XXXX.npy   | Contain the time of RFF in XXXX experiment                                                    |
 | error_time_XXXX.npy | Contain error and time of true kernel in XXXX experiment                                      |
+
+**Note**
+
+Download fashion dataset from [here]([https://link-url-here.org](https://www.kaggle.com/datasets/zalando-research/fashionmnist?resource=download&select=fashion-mnist_train.csv)) and extract to the `data` folder.
