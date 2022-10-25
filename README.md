@@ -24,4 +24,4 @@
 
 **Note**
 
-Download fashion dataset from [here]([https://link-url-here.org](https://www.kaggle.com/datasets/zalando-research/fashionmnist?resource=download&select=fashion-mnist_train.csv)) and extract to the `data` folder.
+Download fashion dataset from [here](https://www.kaggle.com/datasets/zalando-research/fashionmnist?resource=download&select=fashion-mnist_train.csv) and extract to the `data` folder.
