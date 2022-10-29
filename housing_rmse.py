@@ -18,26 +18,42 @@ housing_X, housing_y = fetch_california_housing(return_X_y=True)
 X_train, X_test, y_train, y_test = train_test_split(housing_X, housing_y, test_size=0.4, random_state=42)
 
 n_features = X_train.shape[1]
+n_data = X_train.shape[0]
+n_data_list = np.linspace(0, n_data, num=11, dtype=int)[1:]
 gamma = 1/n_features
+np.save("data/data_num_housing", n_data_list)
 
 exact_ridge = Pipeline([
                       ('std',StandardScaler()),
                       ('ridge', KernelRidge(alpha=1, kernel='rbf', gamma = gamma)),
                       ])
 
-start = time()
-exact_ridge.fit(X_train,y_train)
-t_exact_ridge = time() - start
+ridge_times = []
+ridge_rmse = []
 
-y_pred = exact_ridge.predict(X_test)                      
-rmse = np.sqrt(mean_squared_error(y_test, y_pred))   
-np.save('data/error_time_housing', np.array([rmse, t_exact_ridge]))
-print(f'Testing RMSE of exact Ridge = {rmse:.5f} | training time = {t_exact_ridge:.3f}')
+for n in n_data_list:
+    start = time()
+    exact_ridge.fit(X_train[:n,],y_train[:n])
+    t_exact_ridge = time() - start
+    ridge_times.append(t_exact_ridge)
+    
+    y_pred = exact_ridge.predict(X_test)                      
+    rmse = np.sqrt(mean_squared_error(y_test, y_pred)) 
+    ridge_rmse.append(rmse)
+    
+    print(f'No. of data: {n} | Testing RMSE of exact Ridge = {rmse:.5f} | training time = {t_exact_ridge:.3f}')
+    
+np.save('data/exact_rmse_housing', np.array(ridge_rmse))
+np.save('data/exact_time_housing', np.array(ridge_times))
+
+# np.save('data/error_time_housing', np.array([rmse, t_exact_ridge]))
+# print(f'Testing RMSE of exact Ridge = {rmse:.5f} | training time = {t_exact_ridge:.3f}')
 
 Ds = np.load('data/Ds_housing.npy')
 num_Ds = len(Ds)
-num_repeats = 10
-rff_times, rff_rmse = np.zeros((num_Ds,num_repeats)), np.zeros((num_Ds,num_repeats))
+num_data = len(n_data_list)
+rff_times, rff_rmse = np.zeros((num_Ds,num_data)), np.zeros((num_Ds,num_data))
+
 
 for i,D in enumerate(Ds):
     rff_pip = Pipeline([
@@ -46,16 +62,16 @@ for i,D in enumerate(Ds):
                 ('ridge', Ridge(alpha=1)),
              ])
 
-    for n in range(num_repeats):
+    for j,n in enumerate(n_data_list):
         start = time()
-        rff_pip.fit(X_train,y_train)
+        rff_pip.fit(X_train[:n,],y_train[:n])
         t_rff = time() - start
-        rff_times[i,n] = t_rff
+        rff_times[i,j] = t_rff
 
         y_pred_rff = rff_pip.predict(X_test)                      
         rmse = np.sqrt(mean_squared_error(y_test, y_pred_rff)) 
-        rff_rmse[i,n] = rmse
-    print(f"Iteration {i} done: Approxiamtion with {D} features, RFF takes about {t_rff:.3f} sec per run")
+        rff_rmse[i,j] = rmse
+    print(f"Iteration {i} done: Approxiamtion with {D} features, RFF takes about {t_rff:.3f} sec")
 
 np.save('data/rff_rmse_housing', rff_rmse)
 np.save('data/rff_times_housing', rff_times)

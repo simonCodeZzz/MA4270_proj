@@ -8,7 +8,7 @@ from sklearn.datasets import fetch_california_housing
 X, y = fetch_california_housing(return_X_y=True)
 
 gamma = 1/2
-Ds = np.array([2**p for p in range(3,14)]) # different dimensions of data
+Ds = np.array([2**p for p in range(3,13)]) # different dimensions of data
 print(f"Monte Carlo numbers: {Ds}")
 
 start = time()
