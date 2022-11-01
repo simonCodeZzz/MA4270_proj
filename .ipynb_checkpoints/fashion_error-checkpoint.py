@@ -22,26 +22,41 @@ X_test = fashion_test.iloc[:,1:].values
 y_test = fashion_test.iloc[:,0].values
 
 n_features = X_train.shape[1]
+n_data = X_train.shape[0]
+n_data_list = np.linspace(0, n_data, num=11, dtype=int)[1:]
 gamma = 1/n_features
-sample_size = 10000
+np.save("data/data_num_fashion", n_data_list)
+
 exact_svm = Pipeline([
                       ('std',StandardScaler()),
                       ('svc', OneVsRestClassifier(SVC(C=5, kernel="rbf", gamma=gamma))),
                       ])
 
-start = time()
-exact_svm.fit(X_train[:sample_size,:],y_train[:sample_size])
-t_exact_svm = time() - start
+svm_times = []
+svm_errors = []
 
-y_pred = exact_svm.predict(X_test)                      
-error = 1 - accuracy_score(y_test, y_pred)                    
-np.save('data/error_time_fashion', np.array([error, t_exact_svm]))
-print(f'Testing error exact SVM = {error:.5f} | training time ={t_exact_svm:.3f}')
+for n in n_data_list:
+    start = time()
+    exact_svm.fit(X_train[:n,],y_train[:n])
+    t_exact_svm = time() - start
+    svm_times.append(t_exact_svm)
 
-Ds = np.load("data/Ds_fashion.npy")
+    y_pred = exact_svm.predict(X_test)                      
+    error = 1 - accuracy_score(y_test, y_pred)   
+    svm_errors.append(error)
+    print(f'No. of data: {n} | Testing error exact SVM = {error:.5f} | training time ={t_exact_svm:.3f}')
+    
+np.save('data/exact_errors_fashion', np.array(svm_errors))
+np.save('data/exact_time_fashion', np.array(svm_times))
+
+# np.save('data/error_time_fashion', np.array([error, t_exact_svm]))
+# print(f'Testing error exact SVM = {error:.5f} | training time ={t_exact_svm:.3f}')
+
+Ds = np.load('data/Ds_fashion.npy')
 num_Ds = len(Ds)
-num_repeats = 10
-rff_times, rff_errors = np.zeros((num_Ds,num_repeats)), np.zeros((num_Ds,num_repeats))
+num_data = len(n_data_list)
+rff_times, rff_rmse = np.zeros((num_Ds,num_data)), np.zeros((num_Ds,num_data))
+
 
 for i,D in enumerate(Ds):
     rff_pip = Pipeline([
@@ -50,16 +65,17 @@ for i,D in enumerate(Ds):
                 ('linsvc', OneVsRestClassifier(LinearSVC(C=5))),
              ])
 
-    for n in range(num_repeats):
+    for j,n in enumerate(n_data_list):
         start = time()
-        rff_pip.fit(X_train[:sample_size,:],y_train[:sample_size])
+        rff_pip.fit(X_train[:n,],y_train[:n])
         t_rff = time() - start
-        rff_times[i,n] = t_rff
+        rff_times[i,j] = t_rff
 
         y_pred_rff = rff_pip.predict(X_test)                      
         error_rff = 1 - accuracy_score(y_test, y_pred_rff) 
-        rff_errors[i,n] = error_rff
-    print(f"Iteration {i} done: Approxiamtion with {D} features, RFF takes about {t_rff:.3f} sec per run")
+        rff_errors[i,j] = error_rff
+    print(f"Iteration {i} done: Approxiamtion with {D} features, RFF takes about {t_rff:.3f} sec")
+
 
 np.save('data/rff_errors_fashion', rff_errors)
 np.save('data/rff_times_fashion', rff_times)
